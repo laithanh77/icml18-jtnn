@@ -11,6 +11,8 @@ import rdkit.Chem as Chem
 
 from jtnn import *
 
+import sys
+
 lg = rdkit.RDLogger.logger() 
 lg.setLevel(rdkit.RDLogger.CRITICAL)
 
@@ -44,15 +46,21 @@ with open(opts.test_path) as f:
 
 acc = 0.0
 tot = 0
-for smiles in data:
+for i, smiles in enumerate(data):
     mol = Chem.MolFromSmiles(smiles)
     smiles3D = Chem.MolToSmiles(mol, isomericSmiles=True)
-    
-    dec_smiles = model.reconstruct(smiles3D)
+    try:
+      dec_smiles = model.reconstruct(smiles3D)
+    except (RuntimeError, KeyError):
+      print "FAILED: %s ...continuing..." % smiles
+      sys.stdout.flush()
+      continue
     if dec_smiles == smiles3D:
         acc += 1
     tot += 1
-    print acc / tot
+    if i % 10 == 0:
+      print acc / tot
+      sys.stdout.flush()
     """
     dec_smiles = model.recon_eval(smiles3D)
     tot += len(dec_smiles)
@@ -61,4 +69,6 @@ for smiles in data:
             acc += 1
     print acc / tot
     """
+print(acc, tot)
+sys.stdout.flush()
 

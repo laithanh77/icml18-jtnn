@@ -7,6 +7,8 @@ from jtnn_dec import JTNNDecoder
 from mpn import MPN, mol2graph
 from jtmpn import JTMPN
 
+import sys
+
 from chemutils import enum_assemble, set_atommap, copy_edit_mol, attach_mols, atom_equal, decode_stereo
 import rdkit
 import rdkit.Chem as Chem
@@ -50,9 +52,16 @@ class JTNNVAE(nn.Module):
     def encode(self, mol_batch):
         set_batch_nodeID(mol_batch, self.vocab)
         root_batch = [mol_tree.nodes[0] for mol_tree in mol_batch]
-        tree_mess,tree_vec = self.jtnn(root_batch)
-
         smiles_batch = [mol_tree.smiles for mol_tree in mol_batch]
+        #print("root_batch len \n", len(root_batch)) # delete after
+        #try:
+        tree_mess,tree_vec = self.jtnn(root_batch)
+        #except RuntimeError as e:
+            #print(e)
+            #print("\nRuntimeError! Here are the smiles:\n {0}\n".format(smiles_batch))
+            #sys.exit()
+        
+        #print("smiles_batch \n", smiles_batch)  # delete after
         mol_vec = self.mpn(mol2graph(smiles_batch))
         return tree_mess, tree_vec, mol_vec
 
@@ -106,8 +115,15 @@ class JTNNVAE(nn.Module):
                 if node.is_leaf or len(node.cands) == 1: continue
                 cands.extend( [(cand, mol_tree.nodes, node) for cand in node.cand_mols] )
                 batch_idx.extend([i] * len(node.cands))
-
+        #try:
+          #print(len(cands), len(mol_batch), len(mol_vec), len(tree_mess))
         cand_vec = self.jtmpn(cands, tree_mess)
+        #except RuntimeError:
+          #print("cands:", cands)
+          #print("mol_match:", mol_batch)
+          #print("mol_vec:", mol_vec)
+          #print("tree_mess:", tree_mess)
+          #sys.exit()
         cand_vec = self.G_mean(cand_vec)
 
         batch_idx = create_var(torch.LongTensor(batch_idx))

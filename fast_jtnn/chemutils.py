@@ -15,7 +15,7 @@ def set_atommap(mol, num=0):
 
 def get_mol(smiles):
     mol = Chem.MolFromSmiles(smiles)
-    if mol is None: 
+    if mol is None:
         return None
     Chem.Kekulize(mol)
     return mol

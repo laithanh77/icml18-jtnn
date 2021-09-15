@@ -3,6 +3,7 @@ import torch.nn as nn
 from collections import deque
 from mol_tree import Vocab, MolTree
 from nnutils import create_var, GRU
+import sys
 
 MAX_NB = 8
 
@@ -59,6 +60,8 @@ class JTNNEncoder(nn.Module):
 
             cur_x = create_var(torch.LongTensor(cur_x))
             cur_x = self.embedding(cur_x)
+            #print([-1,MAX_NB,self.hidden_size], len(cur_h_nei))  # test
+            #sys.stdout.flush()  # test
             cur_h_nei = torch.cat(cur_h_nei, dim=0).view(-1,MAX_NB,self.hidden_size)
 
             new_h = GRU(cur_x, cur_h_nei, self.W_z, self.W_r, self.U_r, self.W_h)

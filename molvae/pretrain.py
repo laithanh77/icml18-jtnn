@@ -54,22 +54,30 @@ MAX_EPOCH = 3
 PRINT_ITER = 20
 
 for epoch in xrange(MAX_EPOCH):
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, collate_fn=lambda x:x, drop_last=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0, collate_fn=lambda x:x, drop_last=True)
 
     word_acc,topo_acc,assm_acc,steo_acc = 0,0,0,0
 
     for it, batch in enumerate(dataloader):
+        smiles_list = []
+        #print("batch: {0}\n\n".format(batch))
         for mol_tree in batch:
+            smiles_list.append(mol_tree.smiles)
             for node in mol_tree.nodes:
                 if node.label not in node.cands:
                     node.cands.append(node.label)
                     node.cand_mols.append(node.label_mol)
 
         model.zero_grad()
+        #try:
         loss, kl_div, wacc, tacc, sacc, dacc = model(batch, beta=0)
+        #except RuntimeError as e:
+        #    print(e)
+        #    print("\nsmiles: {0}\ncontinuing...\n".format(smiles_list))
+        #    word_acc,topo_acc,assm_acc,steo_acc = 0,0,0,0
+        #    continue
         loss.backward()
         optimizer.step()
-
         word_acc += wacc
         topo_acc += tacc
         assm_acc += sacc
@@ -81,7 +89,7 @@ for epoch in xrange(MAX_EPOCH):
             assm_acc = assm_acc / PRINT_ITER * 100
             steo_acc = steo_acc / PRINT_ITER * 100
 
-            print "KL: %.1f, Word: %.2f, Topo: %.2f, Assm: %.2f, Steo: %.2f" % (kl_div, word_acc, topo_acc, assm_acc, steo_acc)
+            print "KL: %.1f, Word: %.2f, Topo: %.2f, Assm: %.2f, Steo: %.2f, Loss: %.6f" % (kl_div, word_acc, topo_acc, assm_acc, steo_acc, loss.item())
             word_acc,topo_acc,assm_acc,steo_acc = 0,0,0,0
             sys.stdout.flush()
 

@@ -10,6 +10,7 @@ from collections import deque
 import rdkit
 import rdkit.Chem as Chem
 from rdkit.Chem import Draw
+from datetime import datetime
 
 from jtnn import *
 
@@ -24,8 +25,19 @@ parser.add_option("-w", "--hidden", dest="hidden_size", default=200)
 parser.add_option("-l", "--latent", dest="latent_size", default=56)
 parser.add_option("-d", "--depth", dest="depth", default=3)
 parser.add_option("-e", "--stereo", dest="stereo", default=1)
+parser.add_option("-s", "--seed", dest="random_seed", default=None)
 opts,args = parser.parse_args()
    
+if opts.random_seed is not None:
+    epoch_seed = datetime(1970, 1, 1)
+    time_seed = int((datetime.now() - epoch_seed).total_seconds())  # get int seconds from epoch for random seed
+    seed = time_seed + int(opts.random_seed) * 55
+    print("Random seed: {0}".format(seed))
+    torch.manual_seed(seed)
+else:
+    print("Random seed: 0")
+    torch.manual_seed(0)
+
 vocab = [x.strip("\r\n ") for x in open(opts.vocab_path)] 
 vocab = Vocab(vocab)
 
@@ -42,6 +54,6 @@ load_dict.update(missing)
 model.load_state_dict(load_dict)
 model = model.cuda()
 
-torch.manual_seed(0)
+#torch.manual_seed(0)
 for i in xrange(nsample):
     print model.sample_prior(prob_decode=False)

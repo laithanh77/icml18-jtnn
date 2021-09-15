@@ -14,6 +14,10 @@ import cPickle as pickle
 from fast_jtnn import *
 import rdkit
 
+#import os
+#os.environ["CUDA_VISIBLE_DEVICES"] = '0'
+
+
 lg = rdkit.RDLogger.logger() 
 lg.setLevel(rdkit.RDLogger.CRITICAL)
 

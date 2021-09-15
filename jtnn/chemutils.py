@@ -6,7 +6,7 @@ from collections import defaultdict
 from rdkit.Chem.EnumerateStereoisomers import EnumerateStereoisomers, StereoEnumerationOptions
 
 MST_MAX_WEIGHT = 100 
-MAX_NCAND = 2000
+MAX_NCAND = 2000  # original: 2000, lower to avoid gpu memory errors
 
 def set_atommap(mol, num=0):
     for atom in mol.GetAtoms():
@@ -14,7 +14,8 @@ def set_atommap(mol, num=0):
 
 def get_mol(smiles):
     mol = Chem.MolFromSmiles(smiles)
-    if mol is None: 
+    if mol is None:
+        #print("chemutils.py: mol is None, smiles: {0}".format(smiles))
         return None
     Chem.Kekulize(mol)
     return mol
